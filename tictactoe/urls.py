@@ -1,6 +1,8 @@
-from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+
+from tictactoe.views import AddPlayer
 
 urlpatterns = [
-    path('', admin.site.urls),
+    path('api-auth/', include('rest_framework.urls')),
+    path('players/join/', AddPlayer.as_view()),
 ]
