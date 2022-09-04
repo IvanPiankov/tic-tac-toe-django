@@ -13,3 +13,5 @@ class Match(models.Model):
     players = models.ManyToManyField(Player)
     started = models.BooleanField(default=False)
 
+# TODO: Think how to transfer Match to redis or another NoSQL
+

@@ -26,5 +26,3 @@ class StartMatch(APIView):
             player = get_object_or_404(Player, id=players_uuid)
             match.players.add(player)
         return Response(MatchSerializer(instance=match).data)
-
-# TODO: Add changing started to true if game will started

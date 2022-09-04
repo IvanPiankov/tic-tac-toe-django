@@ -19,27 +19,33 @@ def get_players_count(match_id: str):
 
 @database_sync_to_async
 def add_player_to_match(match, player):
-    match.players.add(player)
+    return match.players.add(player)
 
+
+@database_sync_to_async
+def change_game_status(match_id: str, status: bool):
+    match = await get_match(match_id)
+    match.started = status
+    match.save(update_fields=['started'])
+    return match
 
 class MatchConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
-        match_id = self.scope['url_route']['kwargs']['match_id']
-        match = await get_match(match_id)
+        self.match_id = self.scope['url_route']['kwargs']['match_id']
+        match = await get_match(self.match_id)
         if match.started:
             raise Exception("Already started match")
-        players = await get_players_count(match_id)
+        players = await get_players_count(self.match_id)
         if players.players_count.players_count > 1:
             raise Exception('Too many players')
-        await add_player_to_match(match_id, self.scope['player'])
-        self.match_group_name = 'match_%s' % match_id
+        await add_player_to_match(self.match_id, self.scope['player'])
+        self.match_group_name = 'match_%s' % self.match_id
         await self.channel_layer.group_add(self.match_group_name,
                                            self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        print("Disconnected")
         # Leave room group
         await self.channel_layer.group_discard(
             self.match_group_name,
@@ -64,6 +70,7 @@ class MatchConsumer(AsyncJsonWebsocketConsumer):
 
         if event == 'START':
             # Send message to room group
+            await change_game_status(self.match_id, True)
             await self.channel_layer.group_send(self.match_group_name, {
                 'type': 'send_message',
                 'message': message,
@@ -72,6 +79,7 @@ class MatchConsumer(AsyncJsonWebsocketConsumer):
 
         if event == 'END':
             # Send message to room group
+            await change_game_status(self.match_id, False)
             await self.channel_layer.group_send(self.match_group_name, {
                 'type': 'send_message',
                 'message': message,
