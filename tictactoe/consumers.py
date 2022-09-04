@@ -14,11 +14,11 @@ def get_match(match_id: str):
 
 @database_sync_to_async
 def get_players_count(match_id: str):
-    return Match.objects.annotate(players_count=Count('players')).filter(id=match_id).first()
+    return Match.objects.annotate(players_count=Count('players')).get(id=match_id)
 
 
 @database_sync_to_async
-def add_player_to_match(match: str, player):
+def add_player_to_match(match, player):
     match.players.add(player)
 
 
