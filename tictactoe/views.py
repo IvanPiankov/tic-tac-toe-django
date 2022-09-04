@@ -17,10 +17,14 @@ class AddPlayer(APIView):
 
 class StartMatch(APIView):
     def post(self, request):
-        players_uuid = request.headers.get("Player-ID", None)
-        player = get_object_or_404(Player, id=players_uuid)
-        match = Match.objects.annotate(players_count=Count('players')).filter(started=False, players_count=1).first()
+        match = Match.objects.annotate(players_count=Count('players')).filter(started=False,
+                                                                              players_count=1).first()
         if not match:
             match = Match.objects.create()
-        match.players.add(player)
+        players_uuid = request.headers.get("Player-ID", None)
+        if players_uuid:
+            player = get_object_or_404(Player, id=players_uuid)
+            match.players.add(player)
         return Response(MatchSerializer(instance=match).data)
+
+# TODO: Add changing started to true if game will started
