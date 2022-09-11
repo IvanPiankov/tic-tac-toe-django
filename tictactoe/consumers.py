@@ -24,7 +24,7 @@ def add_player_to_match(match, player):
 
 @database_sync_to_async
 def change_game_status(match_id: str, status: bool):
-    match = await get_match(match_id)
+    match = get_match(match_id)
     match.started = status
     match.save(update_fields=['started'])
     return match
